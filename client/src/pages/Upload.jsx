@@ -1,12 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import TableCsv from '../components/TableCsv';
+import axios from 'axios';
 
 export default function Upload() {
   const [file, setFile] = useState(null);
   const [csvData, setCsvData] = useState([]);
   const [selectedID, setSelectedID] = useState(1);
-  const [recommendations, setRecommendations] = useState([]); 
-  const [selectedRow, setSelectedRow] = useState([]); 
+  const [recommendations, setRecommendations] = useState([]);
+  const [selectedRow, setSelectedRow] = useState([]);
+  const [filteredCsvData, setFilteredCsvData] = useState([]);
+  const [filteredSelectedRow, setFilteredSelectedRow] = useState([]);
+  const [removedColumns, setRemovedColumns] = useState([]);
+
+  useEffect(()=>{
+    if (csvData.length > 0) {
+      const filteredCsvData = csvData.map(row => row.filter((_, index) => !removedColumns.includes(index)));
+      setFilteredCsvData(filteredCsvData);
+      const filteredSelectedRow= selectedRow.map(row => row.filter((_, index) => !removedColumns.includes(index)));
+      setFilteredSelectedRow(filteredSelectedRow)
+    }
+  },[csvData, removedColumns])
+
+  // Step 4: Implement handler for column removal
+  const handleColumnRemoval = (index) => {
+    if (removedColumns.includes(index)) {
+      setRemovedColumns(removedColumns.filter(colIndex => colIndex !== index));
+    } else {
+      setRemovedColumns([...removedColumns, index]);
+    }
+    // const filteredCsvData = csvData.map(row => row.filter((_, index) => !removedColumns.includes(index)));
+    // setFilteredCsvData(filteredCsvData);
+  };
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -29,29 +53,32 @@ export default function Upload() {
       const text = e.target.result;
       const rows = text.split('\n').map(row => row.split(','));
       setCsvData(rows);
+      setFilteredCsvData(rows)
+      setSelectedRow([rows[0],rows[1]])
+      setFilteredSelectedRow([rows[0],rows[1]])
     };
 
     reader.readAsText(file);
   };
 
   const changeID = (e) => {
-    let id=parseInt(e.target.value)
-    if(id<=csvData.length&& id>0){
+    let id = parseInt(e.target.value)
+    if (id <= csvData.length && id > 0) {
       setSelectedID(id)
-    } else{
+    } else {
       alert("Please enter a valid ID")
       setSelectedID(1)
     }
   };
 
-  useEffect(()=>{
-    if(csvData.length>0){
-      let row=[]
+  useEffect(() => {
+    if (csvData.length > 0) {
+      let row = []
       row.push(csvData[0])
       row.push(csvData[selectedID])
       setSelectedRow(row);
     }
-  },[selectedID])
+  }, [selectedID])
 
   const getRecommendations = async () => {
     console.log("selectedID=", selectedID);
@@ -64,44 +91,37 @@ export default function Upload() {
     const reader = new FileReader();
     reader.readAsDataURL(file);
 
-    reader.onload = () => {
+    reader.onload = async () => {
       const base64File = reader.result.split(',')[1]; // Remove the data URL prefix
-      const url = `http://localhost:5000/recommendations?csvData=${encodeURIComponent(base64File)}&id=${selectedID}`;
+      const url = `http://localhost:5000/recommendations`;
 
       // Log file information
-      console.log('File name:', file.name);
-      console.log('File size:', file.size);
-      console.log('File type:', file.type);
+      // console.log('File name:', file.name);
+      // console.log('File size:', file.size);
+      // console.log('File type:', file.type);
 
-      fetch(url, {
-        method: 'GET',
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to upload file');
-        }
-        return response.json(); // Parse response data
-      })
-      .then(data => {
-        let arr=[]
+      const dataToSend = {
+        'csvData': base64File,
+        'id': selectedID,
+      };
+      try {
+        const res = await axios.post(url, dataToSend)
+        let arr = []
         arr.push(csvData[0])
-        data.similarDocuments.forEach((doc) => {
+        res.data.similarDocuments.forEach((doc) => {
           arr.push(csvData[doc.id]);
         });
         setRecommendations(arr);
-        console.log('File uploaded successfully:', data);
-        // Handle data as needed
-      })
-      .catch(error => {
-        console.error('Error uploading file:', error);
-        // Handle error as needed
-      });
+        console.log('File uploaded successfully:', res.data);
+      } catch (err) {
+        console.error(err);
+      }
     };
   };
 
-  React.useEffect(() => {
-    console.log("selectedID=", selectedID)
-  }, [selectedID]);
+  // React.useEffect(() => {
+  //   console.log("selectedID=", selectedID)
+  // }, [selectedID]);
 
   return (
     <div className='bg-slate-900 text-white min-h-full flex-1 flex min-w-full justify-center flex-col pb-20'>
@@ -129,10 +149,28 @@ export default function Upload() {
       </div>
       {csvData.length > 0 && (
         <>
+          {/* Remove Columns */}
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <h2 className="text-5xl my-5 text-green-300">Remove Columns</h2>
+            <div className="flex flex-wrap justify-center gap-4">
+              {csvData[0].map((header, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id={`checkbox-${index}`}
+                    checked={removedColumns.includes(index)}
+                    onChange={() => handleColumnRemoval(index)}
+                    className="form-checkbox h-5 w-5 text-gray-600 border-gray-300 rounded focus:ring-gray-500"
+                  />
+                  <label htmlFor={`checkbox-${index}`} className="text-gray-600">{header}</label>
+                </div>
+              ))}
+            </div>
+          </div>
           {/* Display CSV Data */}
           <div>
             <h2 className='text-5xl my-5 text-green-300 text-center'>CSV Data</h2>
-            <TableCsv csvData={csvData} />
+            <TableCsv csvData={filteredCsvData} />
           </div>
           {/* Select id */}
           <div className='flex my-11 items-center flex-col text-center space-y-4'>
@@ -147,9 +185,9 @@ export default function Upload() {
               />
             </div>
           </div>
-          {selectedRow.length>0&&<div>
+          {selectedRow.length > 0 && <div>
             {/* <h2 className='text-5xl my-5 text-green-300'>Selected Row</h2> */}
-            <TableCsv csvData={selectedRow} />
+            <TableCsv csvData={filteredSelectedRow} />
           </div>}
           <div className='text-center'>
             <button onClick={getRecommendations} type="button" className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-gray-800 text-gray-800 hover:border-gray-500 hover:text-gray-500 disabled:opacity-50 disabled:pointer-events-none dark:border-white dark:text-white dark:hover:text-neutral-300 dark:hover:border-neutral-300">
@@ -161,10 +199,10 @@ export default function Upload() {
       {/* Recommendations */}
       {recommendations.length > 0 && (
         <>
-        <div>
-          <h2 className='text-5xl my-5 text-green-300 text-center'>Recommendations</h2>
-          <TableCsv csvData={recommendations} />
-        </div>
+          <div>
+            <h2 className='text-5xl my-5 text-green-300 text-center'>Recommendations</h2>
+            <TableCsv csvData={recommendations} />
+          </div>
         </>
       )}
     </div>
