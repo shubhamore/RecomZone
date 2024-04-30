@@ -12,14 +12,14 @@ export default function Upload() {
   const [filteredSelectedRow, setFilteredSelectedRow] = useState([]);
   const [removedColumns, setRemovedColumns] = useState([]);
 
-  useEffect(()=>{
+  useEffect(() => {
     if (csvData.length > 0) {
       const filteredCsvData = csvData.map(row => row.filter((_, index) => !removedColumns.includes(index)));
       setFilteredCsvData(filteredCsvData);
-      const filteredSelectedRow= selectedRow.map(row => row.filter((_, index) => !removedColumns.includes(index)));
+      const filteredSelectedRow = selectedRow.map(row => row.filter((_, index) => !removedColumns.includes(index)));
       setFilteredSelectedRow(filteredSelectedRow)
     }
-  },[csvData, removedColumns,selectedRow])
+  }, [csvData, removedColumns, selectedRow])
 
   // Step 4: Implement handler for column removal
   const handleColumnRemoval = (index) => {
@@ -54,8 +54,8 @@ export default function Upload() {
       const rows = text.split('\n').map(row => row.split(','));
       setCsvData(rows);
       setFilteredCsvData(rows)
-      setSelectedRow([rows[0],rows[1]])
-      setFilteredSelectedRow([rows[0],rows[1]])
+      setSelectedRow([rows[0], rows[1]])
+      setFilteredSelectedRow([rows[0], rows[1]])
     };
 
     reader.readAsText(file);
@@ -80,44 +80,37 @@ export default function Upload() {
     }
   }, [selectedID])
 
+
   const getRecommendations = async () => {
     console.log("selectedID=", selectedID);
-    if (!file) {
-      alert("Please select a file first.");
+    if (filteredCsvData.length === 0) {
+      alert("Please upload a CSV file first.");
       return;
     }
 
-    // Convert file to Base64 string
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
+    const filteredCsvBase64 = btoa(filteredCsvData.map(row => row.join(',')).join('\n'));
 
-    reader.onload = async () => {
-      const base64File = reader.result.split(',')[1]; // Remove the data URL prefix
-      const url = `http://localhost:5000/recommendations`;
+    const url = `http://localhost:5000/recommendations`;
 
-      // Log file information
-      // console.log('File name:', file.name);
-      // console.log('File size:', file.size);
-      // console.log('File type:', file.type);
-
-      const dataToSend = {
-        'csvData': base64File,
-        'id': selectedID,
-      };
-      try {
-        const res = await axios.post(url, dataToSend)
-        let arr = []
-        arr.push(csvData[0])
-        res.data.similarDocuments.forEach((doc) => {
-          arr.push(csvData[doc.id]);
-        });
-        setRecommendations(arr);
-        console.log('File uploaded successfully:', res.data);
-      } catch (err) {
-        console.error(err);
-      }
+    const dataToSend = {
+      'csvData': filteredCsvBase64,
+      'id': selectedID,
     };
+
+    try {
+      const res = await axios.post(url, dataToSend);
+      let arr = [];
+      arr.push(filteredCsvData[0]);
+      res.data.similarDocuments.forEach((doc) => {
+        arr.push(filteredCsvData[doc.id]);
+      });
+      setRecommendations(arr);
+      console.log('Recommendations received successfully:', res.data);
+    } catch (err) {
+      console.error(err);
+    }
   };
+
 
   // React.useEffect(() => {
   //   console.log("selectedID=", selectedID)

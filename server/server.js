@@ -15,16 +15,11 @@ app.use(bodyParser.json());
 
 
 app.post("/recommendations", (req, res) => {
-  // console.log("req=",req)
-  console.log("req.body=",req.body)
+  // console.log("req.body=",req.body)
   const { csvData, id } = req.body;
-  console.log("id=",id)
+  // console.log("id=",id)
 
-  // const csvBase64 = req.query.csvData; // assuming the encoded data is sent in the query with key 'csvData'
-  // const id = req.query.id; // assuming the id is sent in the query with key 'id'
   const csv = Buffer.from(req.body.csvData, "base64").toString("utf-8");
-  // const csv = req.body.csvData;
-  // const id = req.body.id;
   // console.log("csv=",csv)
   const rows = csv.split("\n").slice(1);
   const documents = [];
