@@ -11,6 +11,7 @@ export default function Upload() {
   const [filteredCsvData, setFilteredCsvData] = useState([]);
   const [filteredSelectedRow, setFilteredSelectedRow] = useState([]);
   const [removedColumns, setRemovedColumns] = useState([]);
+  const [idOfRecommendedRows, setIdOfRecommendedRows] = useState([]);
 
   useEffect(() => {
     if (csvData.length > 0) {
@@ -21,15 +22,12 @@ export default function Upload() {
     }
   }, [csvData, removedColumns, selectedRow])
 
-  // Step 4: Implement handler for column removal
   const handleColumnRemoval = (index) => {
     if (removedColumns.includes(index)) {
       setRemovedColumns(removedColumns.filter(colIndex => colIndex !== index));
     } else {
       setRemovedColumns([...removedColumns, index]);
     }
-    // const filteredCsvData = csvData.map(row => row.filter((_, index) => !removedColumns.includes(index)));
-    // setFilteredCsvData(filteredCsvData);
   };
 
   const handleFileChange = (event) => {
@@ -80,6 +78,11 @@ export default function Upload() {
     }
   }, [selectedID])
 
+  const handleClickChangeSelectedId = (index) =>{
+    setSelectedID(idOfRecommendedRows[index]);
+    getRecommendations();
+  }
+
 
   const getRecommendations = async () => {
     console.log("selectedID=", selectedID);
@@ -105,6 +108,7 @@ export default function Upload() {
         arr.push(filteredCsvData[doc.id]);
       });
       setRecommendations(arr);
+      setIdOfRecommendedRows(res.data.similarDocuments.map(doc => doc.id));
       console.log('Recommendations received successfully:', res.data);
     } catch (err) {
       console.error(err);
@@ -194,7 +198,7 @@ export default function Upload() {
         <>
           <div>
             <h2 className='text-5xl my-5 text-green-300 text-center'>Recommendations</h2>
-            <TableCsv csvData={recommendations} />
+            <TableCsv csvData={recommendations} isClickable={true} handleClickChangeSelectedId={handleClickChangeSelectedId} />
           </div>
         </>
       )}
