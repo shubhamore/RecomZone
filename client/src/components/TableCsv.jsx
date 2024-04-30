@@ -50,7 +50,7 @@ export default function TableCsv({ csvData }) {
             </div>
             <div>
                 {/* Pagination */}
-                <nav className="flex items-center justify-between pt-4" aria-label="Table navigation">
+                <nav className="flex items-center justify-between pt-4 overflow-x-auto" aria-label="Table navigation">
                     <span className="text-sm font-normal text-gray-500 dark:text-gray-400 mb-4 md:mb-0 block w-full md:inline md:w-auto">
                         Showing <span className="font-semibold text-gray-900 dark:text-white">
                             {startIndex}-{endIndex - 1}

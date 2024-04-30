@@ -19,7 +19,7 @@ export default function Upload() {
       const filteredSelectedRow= selectedRow.map(row => row.filter((_, index) => !removedColumns.includes(index)));
       setFilteredSelectedRow(filteredSelectedRow)
     }
-  },[csvData, removedColumns])
+  },[csvData, removedColumns,selectedRow])
 
   // Step 4: Implement handler for column removal
   const handleColumnRemoval = (index) => {
