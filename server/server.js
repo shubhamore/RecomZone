@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 app.post("/recommendations", (req, res) => {
   // console.log("req.body=",req.body)
   const { csvData, id } = req.body;
-  // console.log("id=",id)
+  console.log("id=",id)
 
   const csv = Buffer.from(req.body.csvData, "base64").toString("utf-8");
   // console.log("csv=",csv)
@@ -38,7 +38,7 @@ app.post("/recommendations", (req, res) => {
 
   recommender.train(documents);
   const similarDocuments = recommender.getSimilarDocuments(id, 0, 10);
-  console.log("similarDocuments=",similarDocuments)
+  // console.log("similarDocuments=",similarDocuments)
   res.json({ csv, similarDocuments });
 });
 
