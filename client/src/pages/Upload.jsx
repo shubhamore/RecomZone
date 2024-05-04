@@ -25,7 +25,7 @@ export default function Upload() {
       } else {
         setTimeLeft(5);
         const randomNumber = Math.floor(Math.random() * 10);
-        console.log('Random Number:', randomNumber);
+        // console.log('Random Number:', randomNumber);
         handleClickChangeSelectedId(randomNumber);
       }
     }
@@ -110,7 +110,7 @@ export default function Upload() {
   }
 
   const getRecommendations = async (id) => {
-    console.log("id=", id);
+    // console.log("id=", id);
     if (filteredCsvData.length === 0) {
       alert("Please upload a CSV file first.");
       return;
@@ -118,7 +118,7 @@ export default function Upload() {
 
     const filteredCsvBase64 = btoa(filteredCsvData.map(row => row.join(',')).join('\n'));
 
-    const url = `http://localhost:5000/recommendations`;
+    const url = `${process.env.REACT_APP_BACKEND_URL}/cbf/recommendations`;
 
     const dataToSend = {
       'csvData': filteredCsvBase64,
@@ -134,7 +134,7 @@ export default function Upload() {
       });
       setRecommendations(arr);
       setIdOfRecommendedRows(res.data.similarDocuments.map(doc => doc.id));
-      console.log('Recommendations received successfully:', res.data);
+      // console.log('Recommendations received successfully:', res.data);
     } catch (err) {
       console.error(err);
     }
