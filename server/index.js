@@ -3,10 +3,17 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
+
+const productionOrigin = 'https://recom-zone.vercel.app';
+const developmentOrigin = 'http://localhost:3000';
+
+const allowedOrigin = process.env.NODE_ENV === 'production' ? productionOrigin : developmentOrigin;
+
 app.use(cors({
-  origin: 'https://recom-zone.vercel.app'
+  origin: allowedOrigin,
 }));
+
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
